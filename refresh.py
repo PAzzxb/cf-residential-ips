@@ -116,6 +116,24 @@ if __name__ == '__main__':
     cand_path = os.path.join(HERE, 'RES候选池_六地区.txt')
     open(cand_path, 'w').write('\n'.join(out) + '\n')
     print('已更新:', cand_path)
+
+    # ===== 生成「优选池.txt」：干净、可直接喂 KV ADD.txt =====
+    # 规则：每地区取「最快的 N 个」(保证地理覆盖，不卡死速度门槛导致整区消失)；
+    #      纯 IP:PORT#🇺🇸美国01 格式（无垃圾/无注释行）
+    flag = {'TW':'🇹🇼 台湾','HK':'🇭🇰 香港','SG':'🇸🇬 新加坡','US':'🇺🇸 美国','JP':'🇯🇵 日本','KR':'🇰🇷 韩国'}
+    quota = {'HK':8,'TW':8,'SG':8,'JP':10,'KR':8,'US':10}  # 就近优先，US 兜底
+    clean = []
+    stat = {}
+    for cc in REGIONS:
+        # rows[cc] = (up, spd, addr, note)；优先 fast，再按速度降序
+        cand = sorted(rows[cc], key=lambda x: (0 if 'fast' in x[3] else 1, -x[1]))
+        cand = cand[:quota.get(cc, 8)]
+        stat[cc] = len(cand)
+        for i, (up, spd, addr, note) in enumerate(cand, 1):
+            clean.append(f'{addr}#{flag[cc]} {i:02d} ({spd:.0f}MB/s)')
+    pool_path = os.path.join(HERE, '优选池.txt')
+    open(pool_path, 'w').write('\n'.join(clean) + '\n')
+    print('已更新:', pool_path, '| 各地区取用数:', stat, '| 合计', len(clean))
     if topn:
         verified = []
         for cc in REGIONS:
@@ -129,3 +147,4 @@ if __name__ == '__main__':
         open(vp, 'w').write('\n'.join(verified) + '\n')
         print(f'\n端到端验证 {len(verified)} 个可用 → {vp}')
         print('提示: 把该文件内容追加到 KV ADD.txt 即可上线节点')
+
