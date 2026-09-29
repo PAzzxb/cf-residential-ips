@@ -1,7 +1,7 @@
 name: 自动刷新住宅候选池
 on:
   schedule:
-    - cron: '23 */6 * * *'   # 每 6 小时（UTC 23 分，避开整点拥堵）
+    - cron: '17 */4 * * *'   # 每 4 小时（UTC 17 分，避开整点拥堵）
   workflow_dispatch: {}       # 支持手动触发
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: 拉上游候选池并重排
+      - name: 拉上游候选池并重排 + 生成优选池
         run: python3 refresh.py
 
       - name: 有变化才提交
@@ -33,6 +33,6 @@ jobs:
             echo "无变化，跳过提交"
           else
             git add -A
-            git commit -m "chore: 候选池自动刷新 $(date -u '+%Y-%m-%d %H:%M') UTC"
+            git commit -m "chore: 候选池+优选池自动刷新 $(date -u '+%Y-%m-%d %H:%M') UTC"
             git push
           fi
