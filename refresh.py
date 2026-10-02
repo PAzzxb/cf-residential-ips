@@ -308,10 +308,45 @@ def main():
         f.write('\n'.join(res_lines))
     print(f'输出 RES候选池_六地区.txt: {len(res_lines)} 行')
 
-    # 5. 输出 优选池.txt
+    # 5. 输出 优选池.txt（转换节点名格式）
     pool_lines = []
+    region_counters = collections.defaultdict(int)
     for r in selected:
-        pool_lines.append(f"{r['addr']}#{r['note']}")
+        # 转换节点名
+        note = r['note']
+        if '🇹🇼' in note:
+            region = '台湾'
+            flag = '🇹🇼'
+        elif '🇭🇰' in note:
+            region = '香港'
+            flag = '🇭🇰'
+        elif '🇸🇬' in note:
+            region = '新加坡'
+            flag = '🇸🇬'
+        elif '🇺🇸' in note:
+            region = '美国'
+            flag = '🇺🇸'
+        elif '🇯🇵' in note:
+            region = '日本'
+            flag = '🇯🇵'
+        elif '🇰🇷' in note:
+            region = '韩国'
+            flag = '🇰🇷'
+        else:
+            region = '未知'
+            flag = '🏳️'
+        
+        # 提取速度
+        speed_match = re.search(r'([\d.]+)MB/s', note)
+        speed = speed_match.group(1) if speed_match else '?'
+        
+        # 生成序号
+        region_counters[region] += 1
+        seq = region_counters[region]
+        
+        new_note = f"{flag} {region} {seq:02d} ({speed}MB/s)"
+        pool_lines.append(f"{r['addr']}#{new_note}")
+    
     with open(os.path.join(HERE, '优选池.txt'), 'w') as f:
         f.write('\n'.join(pool_lines))
     print(f'输出 优选池.txt: {len(pool_lines)} 行')
